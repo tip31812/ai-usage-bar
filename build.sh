@@ -10,7 +10,7 @@ LSREGISTER=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchSe
 rm -rf "$BUILD" build
 mkdir -p "$APP/Contents/MacOS"
 
-swiftc -O -swift-version 5 -parse-as-library Sources/main.swift \
+swiftc -O -swift-version 5 -parse-as-library Sources/*.swift \
   -target arm64-apple-macos14.0 \
   -o "$APP/Contents/MacOS/QuotaBar"
 

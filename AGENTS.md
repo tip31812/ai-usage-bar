@@ -72,3 +72,38 @@ rm -rf /Applications/AI額度看板.app ~/Library/LaunchAgents/app.tipstudio.quo
 - Never enter passwords, tokens or credentials for the user. 絕不代輸密碼或憑證。
 - Never make the app refresh or write Claude tokens; never kill a running `claude` refresh (see README → Known limitations). 不要讓 App 自己換新或寫回 token，不要砍執行中的 claude。
 - Don't modify user config files without asking and merging. 改設定檔前先問，且合併而非覆蓋。
+
+---
+
+# Extending: adding another AI service / 擴充：新增其他 AI 服務
+
+For developers (or AI assistants asked to customize the app) — e.g. "add Gemini / Cursor / Copilot usage". 給想自己加服務的人（或被請求客製的 AI）。
+
+## Code map / 程式地圖 (`Sources/`)
+
+| File | What it holds / 內容 |
+|---|---|
+| `Models.swift` | `UsageWindow`, `ProviderState` (the data every service must produce), network/time helpers, `Log` |
+| `ClaudeProvider.swift`, `CodexProvider.swift` | **One file per service**: `enum XxxFetcher { static func fetch() async -> ProviderState }`. Copy one of these as your template. 每家一個檔，複製一份當範本 |
+| `Conversations.swift` | Scans local chat logs for conversation length (Claude Code / Codex) |
+| `Notifier.swift` | Mac notifications (Claude low/back, Codex long chat, Claude logged out) |
+| `Store.swift` | App state, refresh timers, `Provider` wrapper, `store.providers` list |
+| `Views.swift` | Panel, rings, legend, detail rows, menu-bar label, `Brand` colors/icons, routing advice |
+| `App.swift` | Launch-at-login agent, `--snapshot` mode, app entry point |
+
+## Recipe / 步驟
+
+1. **Find a data source.** Does the service expose remaining quota via a CLI login, an API, or local logs? Verify it works with `curl`/the CLI first. If there is no way to read usage, stop and tell the user honestly. 先確認真的有辦法讀到額度；沒有就如實告知，不要硬做。
+2. **Create `Sources/XxxProvider.swift`** with `enum XxxFetcher { static func fetch() async -> ProviderState }`. Fill `windows` (`UsageWindow(label:usedPercent:resetsAt:)`), `live`, `source`, `error`. Use label `"每週"` for the weekly window and a short label like `"5 小時"` for others (the UI recognizes `"每週"`). Never write credentials anywhere; log only reasons with `Log`.
+3. **Add a `Brand`** in `Views.swift` (`Brand.xxx`: name, SF Symbol, color).
+4. **Wire it into `Store.swift`**: add `@Published var xxx = ProviderState()`, fetch it in the refresh function next to Claude/Codex, and include it in `providers` (the order = ring order, outer → inner).
+5. **Rings / legend / detail list** already iterate over `store.providers`, so they pick the new service up automatically. Check the ring size still looks fine with 3+ rings (`ConcentricRings` in `Views.swift`).
+6. **Still hard-coded for two services — update if you need them** :
+   - `advise(claude:codex:)` and `menuBarFocus(claude:codex:)` in `Views.swift` (routing advice and the menu-bar readout; callers pass `ps[0]`, `ps[1]`).
+   - `Notifier.checkClaude` in `Notifier.swift` (Claude low/back notifications).
+   - `runSnapshot` in `App.swift` (assigns `store.claude/codex` for `--snapshot`).
+   - Conversation list color `c.tool == "Claude"` in `Views.swift`, and `Conversations.swift` if the service keeps local chat logs.
+7. **Build and verify**: `./build.sh`, then `build.noindex/AI額度看板.app/Contents/MacOS/QuotaBar --snapshot out.png --demo` (and `--dark`) and look at the image. Don't claim it works until you've seen real numbers or said clearly that it's unverified. 編譯後用 `--snapshot` 看圖，沒看到真實數字就要說明未驗證。
+8. **Respect the rules above**: read-only credentials, ask before touching user config, tell the user about new privacy implications (what the new service's token is sent to). 新增服務後，要告訴使用者新的隱私影響（token 會送到哪裡）。
+
+Tip: keep your fork's changes in your own repo; update the README so the next person knows what you added. 建議在自己的 fork 更新 README。

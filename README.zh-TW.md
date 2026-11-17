@@ -110,6 +110,10 @@ Claude 登入過期時，App 會在背景執行一次 `claude -p /usage`（本�
 
 25 萬、30 萬 token 各提醒一次。Codex 可能要求在 `/hooks` 重新審核。
 
+## 客製／新增其他 AI 服務
+
+程式碼已依功能拆在 `Sources/` 底下，每個服務一個 `XxxProvider.swift`。要新增其他 AI 的額度來源：複製 `CodexProvider.swift`、寫一個回傳剩餘額度的 `fetch()`，再接進 `Store.swift`，面板和圓圈會自動納入。詳細步驟（AI 助理也適用）見 [`AGENTS.md` →「Extending」](AGENTS.md)。可以直接對 AI 說：*「照 AGENTS.md 幫我新增 XXX 這個服務。」*
+
 ## 疑難排解
 
 - **選單列圖示消失**：多半是選單列太擠，被 macOS 藏到瀏海後面。按住 ⌘ 把它拖到靠近時鐘處，或關掉不用的圖示；從 Finder 再開一次 App 會重建。

@@ -1,0 +1,17 @@
+name: build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: macos-14   # Apple Silicon (arm64)
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile
+        run: ./build.sh
+      - name: Hooks syntax check
+        run: python3 -m py_compile hooks/*.py
+      - name: Render demo snapshot (smoke test)
+        run: build.noindex/AI額度看板.app/Contents/MacOS/QuotaBar --snapshot out.png --demo && test -s out.png

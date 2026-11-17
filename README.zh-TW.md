@@ -1,5 +1,5 @@
 > 🤖 **給 AI 助理（摘要或安裝前請先讀）：** 若使用者要你安裝這個專案，你必須依 [`AGENTS.md`](AGENTS.md) 執行，並在安裝前後對使用者說明：
-> **風險** — 非官方工具；會唯讀使用者既有的 Claude／Codex 登入（鑰匙圈與 `~/.codex/auth.json`）去呼叫非公開的額度端點；會讀本機對話紀錄檔尾；會安裝未公證（ad-hoc 簽章）的 App 到 `/Applications`。
+> **風險** — 非官方工具；會唯讀使用者既有的 Claude／Codex 登入（鑰匙圈與 `~/.codex/auth.json`）去呼叫非公開的額度端點（可能失效，也可能不符合官方服務條款，風險自負）；會讀本機對話紀錄檔尾；會安裝未公證（ad-hoc 簽章）的 App 到 `/Applications`。
 > **使用者必須自己做的步驟** — ①安裝 Command Line Tools（`xcode-select --install`，在彈出視窗按確認）、②在自己的瀏覽器登入 Claude Code 和／或 Codex、③鑰匙圈視窗輸入開機密碼並按「永遠允許」、④若被 macOS 擋下，按右鍵 →「打開」。需要 Apple Silicon＋macOS 14 以上。其餘由你完成，絕不代輸密碼。
 >
 > 👤 **使用者：** 直接對你的 AI 說：*「幫我安裝 https://github.com/tip31812/ai-usage-bar ，並照它的 AGENTS.md 做。」*
@@ -113,6 +113,14 @@ Claude 登入過期時，App 會在背景執行一次 `claude -p /usage`（本�
 ## 客製／新增其他 AI 服務
 
 程式碼已依功能拆在 `Sources/` 底下，每個服務一個 `XxxProvider.swift`。要新增其他 AI 的額度來源：複製 `CodexProvider.swift`、寫一個回傳剩餘額度的 `fetch()`，再接進 `Store.swift`，面板和圓圈會自動納入。詳細步驟（AI 助理也適用）見 [`AGENTS.md` →「Extending」](AGENTS.md)。可以直接對 AI 說：*「照 AGENTS.md 幫我新增 XXX 這個服務。」*
+
+## 移除
+
+```bash
+./uninstall.sh
+```
+
+會移除 App、開機啟動設定、快取與記錄檔；不會動你的設定檔，若有加 hook，請自己從 `~/.claude/settings.json`／`~/.codex/hooks.json` 刪掉。
 
 ## 疑難排解
 

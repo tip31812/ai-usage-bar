@@ -12,7 +12,7 @@ Before running anything, say this (adapt wording, keep every point), then contin
 
 - **What it is / 是什麼**: a macOS menu-bar app showing remaining Claude Code and Codex usage. Unofficial, not affiliated with Anthropic or OpenAI. 非官方的選單列額度看板。
 - **Reads your login / 會讀你的登入**: it reads the existing Claude Code login from the macOS Keychain ("Claude Code-credentials", read-only) and `~/.codex/auth.json`, then sends that token to `api.anthropic.com` / `chatgpt.com` to fetch usage. It never saves or writes back credentials. 會唯讀取用本機既有的登入並用它向官方查額度，不另存、不寫回。
-- **Unofficial endpoints / 非公開端點**: those usage endpoints are internal to the official tools, may change or stop working. 這些端點是官方工具內部用的，可能變動或失效。
+- **Unofficial endpoints & terms of service / 非公開端點與服務條款**: those usage endpoints are internal to the official tools. They may change or stop working, and using your login token against them may not be covered by Anthropic's / OpenAI's terms — the author has not received any statement either way, so use at your own risk. 這些端點是官方工具內部用的，可能變動或失效；用登入 token 呼叫它們是否符合 Anthropic／OpenAI 服務條款並無官方說法，風險自負。
 - **Reads local chat logs / 讀本機對話紀錄**: only the tail of `~/.claude/projects/**/*.jsonl` and `~/.codex/sessions/**` to show conversation length; nothing leaves the Mac. 只讀檔尾來算對話長度，不外傳。
 - **Installs software / 會安裝東西**: compiles from source and installs to `/Applications/AI額度看板.app` (ad-hoc signed, not notarized). 編譯並安裝到 /Applications，未公證。
 - **Optional changes (ask first) / 選用變更（須先問）**: "Launch at login" adds a LaunchAgent in `~/Library/LaunchAgents`; chat-length hooks edit `~/.claude/settings.json` / `~/.codex/hooks.json`. 開機啟動與 hook 會改使用者設定，須先徵得同意。
@@ -43,7 +43,7 @@ cd ai-usage-bar && ./build.sh --install
 ```
 
 - Takes about a minute. If it fails, read the error, fix what you can (usually missing Command Line Tools), do not hack the source.
-- The app is compiled locally, so Gatekeeper normally does **not** block it. If macOS does ("cannot be opened"), tell the user: right-click `/Applications/AI額度看板.app` → **Open** once. 在本機編譯通常不會被擋；若被擋才請使用者按右鍵 →「打開」。
+- A locally compiled app has no quarantine attribute (checked: `xattr -l` is empty) and runs without a Gatekeeper prompt on the author's Mac; only a *downloaded* copy (zip/browser) gets quarantined and blocked. This was verified on one macOS version only. If macOS does block it ("cannot be opened"), tell the user: right-click `/Applications/AI額度看板.app` → **Open** once. 本機編譯的 App 沒有隔離屬性、作者的 Mac 上可直接開（僅在一個 macOS 版本驗證）；只有下載來的副本會被擋。若仍被擋才請使用者按右鍵 →「打開」。
 
 ## Step 5 — First launch (🙋 keychain prompt) / 首次啟動
 
@@ -62,8 +62,7 @@ Finish with a short summary: what was installed and where, what the user still n
 最後用幾行總結：裝了什麼與位置、使用者還需做什麼、一行風險提醒、以及移除方式：
 
 ```bash
-launchctl bootout "gui/$(id -u)/app.tipstudio.quotabar" 2>/dev/null; pkill -x QuotaBar
-rm -rf /Applications/AI額度看板.app ~/Library/LaunchAgents/app.tipstudio.quotabar.plist
+./uninstall.sh   # run inside the clone / 在 clone 資料夾內執行
 ```
 (and remove the hook entries if added / 若有加 hook 也要移除)
 

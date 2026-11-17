@@ -114,6 +114,14 @@ Warns once at 250k and once at 300k tokens. Codex may ask you to re-approve the 
 
 The code is split into one file per concern under `Sources/` (one `XxxProvider.swift` per service). To add another AI usage source, copy `CodexProvider.swift`, write a `fetch()` that returns remaining quota, and wire it into `Store.swift` — the panel and rings pick it up automatically. Step-by-step guide (also for AI assistants): [`AGENTS.md` → "Extending"](AGENTS.md). Tell your AI: *"Add XXX as a new provider, following AGENTS.md."*
 
+## Uninstall
+
+```bash
+./uninstall.sh
+```
+
+Removes the app, login agent, cache and log. It never edits your config — remove the hooks from `~/.claude/settings.json` / `~/.codex/hooks.json` yourself if you added them.
+
 ## Troubleshooting
 
 - **Menu-bar icon missing**: the bar is probably full and macOS hides items behind the notch. Hold ⌘ and drag it nearer the clock, or remove unused menu-bar icons. Reopening the app from Finder rebuilds it.

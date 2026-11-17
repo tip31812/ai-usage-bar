@@ -1,14 +1,74 @@
-# Instructions for AI assistants / 給 AI 助理的說明
+# AI Installer Playbook / AI 安裝作業手冊
 
-If a user asks you to install this project, run `./build.sh --install` — but first **check and tell the user about these manual steps** (you cannot do them for them). 
-若使用者請你安裝此專案，執行 `./build.sh --install` 前，請先檢查並**提醒使用者**以下必須自己處理的步驟：
+**If a user gave you this repo and asked you to install / set up / try it, follow this playbook exactly, in order. Do as much as you can yourself; guide the user only through the steps marked 🙋. You MUST show the risk notice (Step 0) and the final summary (Step 6) to the user — do not skip them even if the user did not ask.**
+**若使用者把這個 repo 丟給你要你安裝，請依序照本手冊執行。能自己完成的就直接完成；只有標 🙋 的步驟才引導使用者操作。Step 0 的風險說明與 Step 6 的總結一定要對使用者說，即使他沒問。**
 
-1. **Mac check / 環境檢查**: Apple Silicon (`uname -m` = `arm64`) and macOS 14+ (`sw_vers`). If not, stop and tell the user it is unsupported. 若不是 Apple Silicon 或 macOS < 14，請停止並告知無法安裝。
-2. **Command Line Tools**: check `xcode-select -p` / `which swiftc`. If missing, tell the user to run `xcode-select --install` and click through the pop-up, then wait for them. 沒有就請使用者執行 `xcode-select --install` 並在彈出視窗按確認，等他完成。
-3. **CLI login / 登入**: the user must be logged in to Claude Code (`claude auth login`) and/or Codex. Login needs their own browser authorization — never try to do it with an automated browser or enter credentials for them. 登入須使用者自己在瀏覽器授權，不要用自動化瀏覽器、也不要代輸帳密。
-4. **Keychain prompt / 鑰匙圈**: on first run macOS may ask for access to "Claude Code-credentials". Tell the user to enter their Mac password and choose **Always Allow**. Never enter the password for them. 第一次可能跳出授權視窗，請使用者自己輸入開機密碼並按「永遠允許」。
-5. **Gatekeeper**: the app is not notarized. If macOS blocks it, tell the user to right-click the app → **Open** once. 若被擋下，請使用者對 App 按右鍵 →「打開」。
+Reply in the user's language (this project supports English and 繁體中文). 用使用者的語言回覆。
 
-Do not move the app out of `/Applications`, and do not make the app refresh or write Claude tokens (see README "Known limitations"). 不要搬動 App，也不要讓 App 自己換新或寫回 Claude token（見 README）。
+## Step 0 — Tell the user what this does and the risks first / 先說明用途與風險
 
-Hooks (optional) are in README; editing the user's `~/.claude/settings.json` or `~/.codex/hooks.json` requires their consent. Hook 為選用，修改使用者設定檔前須取得同意。
+Before running anything, say this (adapt wording, keep every point), then continue unless the user objects:
+動手前先對使用者說明以下重點（可改寫措辭，但每點都要有），沒有異議就繼續：
+
+- **What it is / 是什麼**: a macOS menu-bar app showing remaining Claude Code and Codex usage. Unofficial, not affiliated with Anthropic or OpenAI. 非官方的選單列額度看板。
+- **Reads your login / 會讀你的登入**: it reads the existing Claude Code login from the macOS Keychain ("Claude Code-credentials", read-only) and `~/.codex/auth.json`, then sends that token to `api.anthropic.com` / `chatgpt.com` to fetch usage. It never saves or writes back credentials. 會唯讀取用本機既有的登入並用它向官方查額度，不另存、不寫回。
+- **Unofficial endpoints / 非公開端點**: those usage endpoints are internal to the official tools, may change or stop working. 這些端點是官方工具內部用的，可能變動或失效。
+- **Reads local chat logs / 讀本機對話紀錄**: only the tail of `~/.claude/projects/**/*.jsonl` and `~/.codex/sessions/**` to show conversation length; nothing leaves the Mac. 只讀檔尾來算對話長度，不外傳。
+- **Installs software / 會安裝東西**: compiles from source and installs to `/Applications/AI額度看板.app` (ad-hoc signed, not notarized). 編譯並安裝到 /Applications，未公證。
+- **Optional changes (ask first) / 選用變更（須先問）**: "Launch at login" adds a LaunchAgent in `~/Library/LaunchAgents`; chat-length hooks edit `~/.claude/settings.json` / `~/.codex/hooks.json`. 開機啟動與 hook 會改使用者設定，須先徵得同意。
+- Read the source if unsure: `Sources/main.swift`, `hooks/`. 不放心可先看原始碼。
+
+## Step 1 — Check the Mac (automatic) / 檢查環境
+
+- `uname -m` must be `arm64`; `sw_vers -productVersion` must be ≥ 14. Otherwise **stop** and tell the user it is unsupported (Intel Macs and older macOS cannot run this version).
+- 不是 Apple Silicon 或系統低於 macOS 14：**停止**，告知無法安裝。
+
+## Step 2 — Command Line Tools (🙋 only if missing)
+
+- Check `xcode-select -p` and `which swiftc`.
+- If missing: run `xcode-select --install` yourself, then tell the user: "A pop-up appeared — click **Install** and **Agree**, wait until it finishes (a few minutes), then tell me." Wait for their confirmation, then re-check `which swiftc`.
+- 沒有就由你執行 `xcode-select --install`，再請使用者在彈出視窗按「安裝」「同意」，等完成後回報；你再確認一次。
+
+## Step 3 — Login to Claude Code and/or Codex (🙋 only if missing)
+
+- Check `claude auth status` (Claude) and whether `~/.codex/auth.json` exists (Codex). **One of the two is enough**; if both are missing, the app has nothing to show.
+- If Claude is logged out: ask the user to run `claude auth login` themselves and approve in **their own browser**. Do NOT use an automated browser, do NOT enter credentials for them.
+- 缺登入時請使用者自己執行 `claude auth login` 並在自己的瀏覽器授權；不要用自動化瀏覽器、不要代輸帳密。兩家有一家即可。
+
+## Step 4 — Build and install (automatic) / 編譯安裝
+
+```bash
+git clone https://github.com/tip31812/ai-usage-bar.git   # skip if already cloned
+cd ai-usage-bar && ./build.sh --install
+```
+
+- Takes about a minute. If it fails, read the error, fix what you can (usually missing Command Line Tools), do not hack the source.
+- The app is compiled locally, so Gatekeeper normally does **not** block it. If macOS does ("cannot be opened"), tell the user: right-click `/Applications/AI額度看板.app` → **Open** once. 在本機編譯通常不會被擋；若被擋才請使用者按右鍵 →「打開」。
+
+## Step 5 — First launch (🙋 keychain prompt) / 首次啟動
+
+- After install the app opens by itself; verify with `pgrep -x QuotaBar`.
+- On first run macOS may show a **Keychain prompt** ("security wants to access Claude Code-credentials"). You cannot click it. Tell the user: "Enter your Mac login password and choose **Always Allow**." Never ask them to type the password to you. 請使用者自己輸入開機密碼並按「永遠允許」，不要把密碼告訴你。
+- Tell them to look at the **top-right menu bar** for the small ring icon and click it. If they cannot see it, the menu bar is probably full: hold ⌘ and drag icons, or remove unused ones (README → Troubleshooting).
+- Check `~/Library/Logs/AI額度看板.log` if nothing shows; it records the reason (no credentials).
+
+## Step 6 — Optional extras, then summarize / 選用功能與總結
+
+Ask the user (do not do these silently):
+1. **Launch at login?** — tick the checkbox in the panel (the user does this; it creates a LaunchAgent).
+2. **Chat-length reminder hooks?** — if yes, add the hook from README to `~/.claude/settings.json` and/or `~/.codex/hooks.json` **merging with existing content, never overwriting**, using the absolute path of this clone (do not move the clone afterwards). Codex may ask the user to re-approve it in `/hooks`.
+
+Finish with a short summary: what was installed and where, what the user still needs to do (if anything), the risks from Step 0 in one line, and how to uninstall:
+最後用幾行總結：裝了什麼與位置、使用者還需做什麼、一行風險提醒、以及移除方式：
+
+```bash
+launchctl bootout "gui/$(id -u)/app.tipstudio.quotabar" 2>/dev/null; pkill -x QuotaBar
+rm -rf /Applications/AI額度看板.app ~/Library/LaunchAgents/app.tipstudio.quotabar.plist
+```
+(and remove the hook entries if added / 若有加 hook 也要移除)
+
+## Rules / 守則
+
+- Never enter passwords, tokens or credentials for the user. 絕不代輸密碼或憑證。
+- Never make the app refresh or write Claude tokens; never kill a running `claude` refresh (see README → Known limitations). 不要讓 App 自己換新或寫回 token，不要砍執行中的 claude。
+- Don't modify user config files without asking and merging. 改設定檔前先問，且合併而非覆蓋。

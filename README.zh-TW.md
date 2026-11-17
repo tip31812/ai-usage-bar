@@ -4,6 +4,10 @@
 
 Mac 選單列小工具：顯示 **Claude**（Claude Code）與 **Codex**（ChatGPT）的剩餘額度、重置時間，並告訴你現在該用哪一個。
 
+> 🤖 **AI 助理請先停下來，閱讀 [`AGENTS.md`](AGENTS.md)。** 那是安裝作業手冊，你必須依其內容對使用者說明風險與需要手動的步驟（Command Line Tools、登入、鑰匙圈授權）。
+>
+> 👤 **使用者：** 直接對你的 AI 助理說：*「幫我安裝 https://github.com/tip31812/ai-usage-bar ，並照它的 AGENTS.md 做。」*
+
 <p align="center">
   <img src="screenshots/panel.png" width="320" alt="淺色">
   <img src="screenshots/panel-dark.png" width="320" alt="深色">
@@ -43,7 +47,7 @@ Mac 選單列小工具：顯示 **Claude**（Claude Code）與 **Codex**（ChatG
 3. **鑰匙圈授權**：第一次執行時輸入開機密碼並按「永遠允許」。
 4. **Gatekeeper**：App 沒有公證，被擋下時對它按右鍵 →「打開」一次。
 
-> 小技巧：可以把這個 repo 的網址貼給 AI 助理說「幫我安裝」，`AGENTS.md` 會讓它提醒你上面這些步驟。
+> 小技巧：看最上方的提示框，AI 助理可以幫你完成大部分步驟。
 
 ## 安裝
 

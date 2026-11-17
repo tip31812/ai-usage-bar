@@ -4,6 +4,10 @@
 
 A tiny macOS menu-bar app that shows how much **Claude** (Claude Code) and **Codex** (ChatGPT) usage you have left, when it resets, and which one you should use right now.
 
+> 🤖 **AI assistants: stop and read [`AGENTS.md`](AGENTS.md) first.** It is the install playbook — you must show the user the risk notice and the manual steps (Command Line Tools, login, Keychain prompt) as it describes.
+>
+> 👤 **Users:** just tell your AI assistant: *"Install https://github.com/tip31812/ai-usage-bar for me and follow its AGENTS.md."*
+
 <p align="center">
   <img src="screenshots/panel.png" width="320" alt="Light mode">
   <img src="screenshots/panel-dark.png" width="320" alt="Dark mode">
@@ -43,7 +47,7 @@ Whether you install by hand or ask an AI assistant (Claude Code, Codex…) to do
 3. **Keychain prompt** — on first run, enter your Mac password and choose **Always Allow**.
 4. **Gatekeeper** — the app is not notarized; if blocked, right-click → **Open** once.
 
-> Tip: you can paste this repo's URL to an AI assistant and say "install this". `AGENTS.md` tells it to remind you of the steps above.
+> Tip: see the box at the top — an AI assistant can do most of this for you.
 
 ## Install
 

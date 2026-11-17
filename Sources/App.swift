@@ -63,7 +63,7 @@ enum LoginAgent {
 /// Finder 再次開啟已在執行的選單列 App 時，重建其選單列項目。
 final class QuotaAppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        Log.write("使用者重新開啟 App，重建選單列項目")
+        Log.write(tr("使用者重新開啟 App，重建選單列項目", "User reopened the app; rebuilding the menu-bar item"))
         if LoginAgent.underLaunchd {
             DispatchQueue.global(qos: .userInitiated).async {
                 _ = LoginAgent.launchctl(["kickstart", "-k", "\(LoginAgent.domain)/\(LoginAgent.label)"])
@@ -79,16 +79,24 @@ final class QuotaAppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
-/// 驗證用：QuotaBar --snapshot out.png [--dark] → 抓一次資料、把面板與選單列畫成圖後結束。
+/// 驗證用：QuotaBar --snapshot out.png [--dark] [--demo] [--lang zh|en] → 抓一次資料、把面板與選單列畫成圖後結束。
 @MainActor
 func runSnapshot(to path: String, dark: Bool) {
     Task { @MainActor in
         let store = Store(autoRefresh: false)
-        async let c = ClaudeFetcher.fetch()
-        async let x = CodexFetcher.fetch()
-        (store.claude, store.codex) = await (c, x)
-        store.conversations = ConversationScanner.scan()
-        if CommandLine.arguments.contains("--demo") {   // 示範資料：截圖用，不顯示真實對話名稱
+        if CommandLine.arguments.contains("--demo") {   // 示範資料：截圖與 CI 用，固定數字、不讀任何登入
+            let now = Date()
+            func demo(_ w: [UsageWindow]) -> ProviderState { var s = ProviderState(); s.windows = w; s.live = true; return s }
+            store.states = [
+                demo([UsageWindow(label: "5 小時", usedPercent: 42, resetsAt: now.addingTimeInterval(2 * 3600 + 600)),
+                      UsageWindow(label: "每週", usedPercent: 46, resetsAt: now.addingTimeInterval(2 * 86400 + 3600))]),
+                demo([UsageWindow(label: "每週", usedPercent: 12, resetsAt: now.addingTimeInterval(6 * 86400))]),
+            ]
+        } else {
+            store.states = await Store.fetchAll(manual: false)
+        }
+        store.conversations = CommandLine.arguments.contains("--demo") ? [] : ConversationScanner.scan()
+        if CommandLine.arguments.contains("--demo") {   // 示範對話：不顯示真實對話名稱
             let now = Date()
             store.conversations = [
                 Conversation(id: "demo1", tool: "Codex", name: "My web app", tokens: 291_000, updated: now),

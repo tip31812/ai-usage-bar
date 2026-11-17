@@ -140,7 +140,7 @@ enum ConversationScanner {
                 }
                 // 看板自己請 CLI 換新登入的那種對話不列
                 if cwd?.contains("app.tipstudio.quotabar") == true { continue }
-                let name = title ?? cwd.map { URL(fileURLWithPath: $0).lastPathComponent } ?? "Claude 對話"
+                let name = title ?? cwd.map { URL(fileURLWithPath: $0).lastPathComponent } ?? tr("Claude 對話", "Claude conversation")
                 result.append(Conversation(id: "claude:" + url.lastPathComponent, tool: "Claude", name: name, tokens: tokens, updated: mtime))
             }
         }
@@ -166,7 +166,7 @@ enum ConversationScanner {
                   let o = (try? JSONSerialization.jsonObject(with: Data(first.utf8))) as? [String: Any],
                   let id = (o["payload"] as? [String: Any])?["id"] as? String else { continue }
             if let index, !index.visibleIDs.contains(id) { continue }
-            let name = index?.names[id] ?? "Codex 對話 \(id.prefix(8))"
+            let name = index?.names[id] ?? tr("Codex 對話 \(id.prefix(8))", "Codex conversation \(id.prefix(8))")
             result.append(Conversation(id: "codex:" + url.lastPathComponent, tool: "Codex", name: name, tokens: tokens, updated: mtime))
         }
         return result

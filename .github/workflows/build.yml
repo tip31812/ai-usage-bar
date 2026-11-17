@@ -13,5 +13,10 @@ jobs:
         run: ./build.sh
       - name: Hooks syntax check
         run: python3 -m py_compile hooks/*.py
-      - name: Render demo snapshot (smoke test)
-        run: build.noindex/AI額度看板.app/Contents/MacOS/QuotaBar --snapshot out.png --demo && test -s out.png
+      - name: Check universal binary
+        run: lipo -archs build.noindex/AI額度看板.app/Contents/MacOS/QuotaBar | tee /dev/stderr | grep -q arm64 && lipo -archs build.noindex/AI額度看板.app/Contents/MacOS/QuotaBar | grep -q x86_64
+      - name: Render demo snapshots (smoke test, zh + en)
+        run: |
+          B=build.noindex/AI額度看板.app/Contents/MacOS/QuotaBar
+          $B --snapshot out-zh.png --demo --lang zh && test -s out-zh.png
+          $B --snapshot out-en.png --demo --lang en && test -s out-en.png

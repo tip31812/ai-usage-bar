@@ -8,16 +8,17 @@ import UserNotifications
 
 func relative(_ d: Date) -> String {
     let s = Int(Date().timeIntervalSince(d))
-    if s < 60 { return "剛剛" }
-    if s < 3600 { return "\(s / 60) 分鐘前" }
-    if s < 86400 { return "\(s / 3600) 小時前" }
-    return "\(s / 86400) 天前"
+    if s < 60 { return tr("剛剛", "just now") }
+    if s < 3600 { return tr("\(s / 60) 分鐘前", "\(s / 60) min ago") }
+    if s < 86400 { return tr("\(s / 3600) 小時前", "\(s / 3600) h ago") }
+    return tr("\(s / 86400) 天前", "\(s / 86400) d ago")
 }
 
 func clock(_ d: Date) -> String {
     let f = DateFormatter()
-    f.locale = Locale(identifier: "zh_TW")
-    f.dateFormat = Calendar.current.isDateInToday(d) ? "今天 HH:mm" : "M/d（EEE）HH:mm"
+    f.locale = Locale(identifier: Lang.zh ? "zh_TW" : "en_US")
+    let today = Calendar.current.isDateInToday(d)
+    f.dateFormat = Lang.zh ? (today ? "今天 HH:mm" : "M/d（EEE）HH:mm") : (today ? "'Today' HH:mm" : "EEE M/d HH:mm")
     return f.string(from: d)
 }
 
@@ -25,8 +26,8 @@ func clock(_ d: Date) -> String {
 
 @MainActor
 final class Store: ObservableObject {
-    @Published var claude = ProviderState()
-    @Published var codex = ProviderState()
+    /// 與 `Sources.all` 同順序
+    @Published var states: [ProviderState] = Sources.all.map { _ in ProviderState() }
     @Published var updatedAt: Date?
     @Published var loading = false
     /// 系統切換淺／深色時 +1，讓選單列圖片重畫
@@ -62,18 +63,27 @@ final class Store: ObservableObject {
         }
         loading = true
         Task {
-            async let c = ClaudeFetcher.fetch(manual: manual)
-            async let x = CodexFetcher.fetch()
+            async let fetched = Store.fetchAll(manual: manual)
             await refreshConversations()
-            let (cs, xs) = await (c, x)
-            claude = cs
-            codex = xs
+            states = await fetched
             let ps = providers
-            Notifier.checkClaude(ps[0], codex: ps[1])
-            Notifier.checkClaudeLogin(cs)
+            Notifier.checkPrimary(ps)
+            if let first = states.first { Notifier.checkClaudeLogin(first) }
             updatedAt = Date()
             loading = false
             scheduleResetRefresh()
+        }
+    }
+
+    /// 所有服務同時讀取，結果依 `Sources.all` 順序回傳
+    static func fetchAll(manual: Bool) async -> [ProviderState] {
+        await withTaskGroup(of: (Int, ProviderState).self) { group in
+            for (i, source) in Sources.all.enumerated() {
+                group.addTask { (i, await source.fetch(manual: manual)) }
+            }
+            var out = Sources.all.map { _ in ProviderState() }
+            for await (i, s) in group { out[i] = s }
+            return out
         }
     }
 
@@ -108,7 +118,7 @@ struct Provider: Identifiable {
 
 extension Store {
     var providers: [Provider] {
-        [Provider(brand: .claude, state: claude), Provider(brand: .codex, state: codex)]
+        zip(Sources.all, states).map { Provider(brand: $0.brand, state: $1) }
     }
 }
 

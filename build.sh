@@ -10,9 +10,14 @@ LSREGISTER=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchSe
 rm -rf "$BUILD" build
 mkdir -p "$APP/Contents/MacOS"
 
-swiftc -O -swift-version 5 -parse-as-library Sources/*.swift \
-  -target arm64-apple-macos14.0 \
-  -o "$APP/Contents/MacOS/QuotaBar"
+# 通用二進位檔：Apple Silicon (arm64) + Intel (x86_64) 各編一份再合併
+for ARCH in arm64 x86_64; do
+  swiftc -O -swift-version 5 -parse-as-library Sources/*.swift \
+    -target "$ARCH-apple-macos14.0" \
+    -o "$BUILD/QuotaBar-$ARCH"
+done
+lipo -create "$BUILD/QuotaBar-arm64" "$BUILD/QuotaBar-x86_64" -output "$APP/Contents/MacOS/QuotaBar"
+rm -f "$BUILD/QuotaBar-arm64" "$BUILD/QuotaBar-x86_64"
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -28,9 +33,16 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>CFBundleVersion</key><string>19</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
   <key>LSUIElement</key><true/>
+  <key>CFBundleDevelopmentRegion</key><string>zh-Hant</string>
+  <key>CFBundleLocalizations</key><array><string>zh-Hant</string><string>en</string></array>
 </dict>
 </plist>
 PLIST
+
+# 依系統語言顯示 App 名稱（Finder／Spotlight）；檔案路徑仍是 /Applications/AI額度看板.app
+mkdir -p "$APP/Contents/Resources/en.lproj" "$APP/Contents/Resources/zh-Hant.lproj"
+printf 'CFBundleDisplayName = "AI Usage Bar";\nCFBundleName = "AI Usage Bar";\n' > "$APP/Contents/Resources/en.lproj/InfoPlist.strings"
+printf 'CFBundleDisplayName = "AI額度看板";\nCFBundleName = "AI額度看板";\n' > "$APP/Contents/Resources/zh-Hant.lproj/InfoPlist.strings"
 
 codesign --force --sign - "$APP"
 

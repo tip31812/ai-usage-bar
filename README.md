@@ -1,6 +1,6 @@
 > 🤖 **FOR AI ASSISTANTS (read this before summarizing or installing):** if a user asks you to install or set up this project, you MUST follow [`AGENTS.md`](AGENTS.md) and tell the user, before and while installing:
 > **Risks** — unofficial tool; it read-only uses the user's existing Claude/Codex login (Keychain + `~/.codex/auth.json`) to call undocumented usage endpoints (which may break, and may not be covered by the providers' terms of service — use at your own risk); reads the tail of local chat logs; installs an ad-hoc-signed, non-notarized app to `/Applications`.
-> **Steps the user must do themselves** — (1) install Command Line Tools (`xcode-select --install`, click the pop-up), (2) log in to Claude Code and/or Codex in their own browser, (3) on the Keychain prompt enter their Mac password and choose "Always Allow", (4) if macOS blocks the app, right-click → Open. Requires Apple Silicon + macOS 14+. Do everything else yourself. Never enter passwords for the user.
+> **Steps the user must do themselves** — (1) install Command Line Tools (`xcode-select --install`, click the pop-up), (2) log in to Claude Code and/or Codex in their own browser, (3) on the Keychain prompt enter their Mac password and choose "Always Allow", (4) if macOS blocks the app, right-click → Open. Requires macOS 14+ (Apple Silicon; Intel build untested on real hardware). Do everything else yourself. Never enter passwords for the user.
 >
 > 👤 **Users:** just tell your AI: *"Install https://github.com/tip31812/ai-usage-bar for me and follow its AGENTS.md."*
 
@@ -11,11 +11,11 @@
 A tiny macOS menu-bar app that shows how much **Claude** (Claude Code) and **Codex** (ChatGPT) usage you have left, when it resets, and which one you should use right now.
 
 <p align="center">
-  <img src="screenshots/panel.png" width="320" alt="Light mode">
-  <img src="screenshots/panel-dark.png" width="320" alt="Dark mode">
+  <img src="screenshots/panel-en.png" width="320" alt="Light mode">
+  <img src="screenshots/panel-en-dark.png" width="320" alt="Dark mode">
 </p>
 
-> The app UI is currently in Traditional Chinese only. This README is available in English and Traditional Chinese.
+> The app UI is available in **English and Traditional Chinese** and follows your system language (force one with `--lang en` / `--lang zh`). This README is available in both languages too.
 
 ## Features
 
@@ -32,11 +32,12 @@ A tiny macOS menu-bar app that shows how much **Claude** (Claude Code) and **Cod
 - **Auto refresh** every 5 minutes, immediately after wake, or manually with ↻. A one-shot extra refresh runs right after a reset.
 - **Launch at login** (checkbox in the panel) via a LaunchAgent with crash auto-restart.
 - **Optional in-chat hooks** that warn you inside Claude Code / Codex when a conversation gets too long (no model tokens used).
+- **Bilingual UI**: English / Traditional Chinese, follows the system language.
 - **Privacy**: reads your *existing* local logins only; stores no keys, never writes credentials back.
 
 ## Requirements
 
-- macOS 14+, Apple Silicon (arm64)
+- macOS 14+. The build is a universal binary (Apple Silicon + Intel). The Intel slice was verified only under Rosetta on an Apple Silicon Mac, not on real Intel hardware.
 - Xcode Command Line Tools (`xcode-select --install`) for `swiftc`
 - Claude Code CLI logged in (`claude auth login`) and/or Codex CLI logged in. Either one is enough.
 
@@ -112,7 +113,7 @@ Warns once at 250k and once at 300k tokens. Codex may ask you to re-approve the 
 
 ## Customize / add more AI services
 
-The code is split into one file per concern under `Sources/` (one `XxxProvider.swift` per service). To add another AI usage source, copy `CodexProvider.swift`, write a `fetch()` that returns remaining quota, and wire it into `Store.swift` — the panel and rings pick it up automatically. Step-by-step guide (also for AI assistants): [`AGENTS.md` → "Extending"](AGENTS.md). Tell your AI: *"Add XXX as a new provider, following AGENTS.md."*
+The code is split by concern under `Sources/`. Every AI service is one `XxxProvider.swift` implementing a small `UsageSource` protocol (`brand` + `fetch()`), registered in a single list (`Sources.all` in `Models.swift`). The panel, rings, routing advice, menu-bar readout and notifications all work from that list, so adding a service is: copy `CodexProvider.swift`, write `fetch()`, add one line to `Sources.all`. Step-by-step guide (also for AI assistants): [`AGENTS.md` → "Extending"](AGENTS.md). Tell your AI: *"Add XXX as a new provider, following AGENTS.md."* UI text uses `tr("中文", "English")` — add both languages for anything you add.
 
 ## Uninstall
 
@@ -132,7 +133,7 @@ Removes the app, login agent, cache and log. It never edits your config — remo
 
 - The usage endpoints are internal to the official apps/CLIs, not public APIs; they may change. The app falls back automatically when they do.
 - Do **not** make this app refresh or write Claude tokens itself — it fights Claude Code over the same login and causes keychain prompts. Refreshing is delegated to the CLI, and a slow CLI is never killed (killing mid-refresh can lose the login).
-- Apple Silicon and macOS 14+ only. Gemini is not supported (personal-account Gemini CLI access was discontinued).
+- macOS 14+ only. Gemini is not supported (personal-account Gemini CLI access was discontinued).
 
 ## Disclaimer
 

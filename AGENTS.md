@@ -20,8 +20,8 @@ Before running anything, say this (adapt wording, keep every point), then contin
 
 ## Step 1 — Check the Mac (automatic) / 檢查環境
 
-- `uname -m` must be `arm64`; `sw_vers -productVersion` must be ≥ 14. Otherwise **stop** and tell the user it is unsupported (Intel Macs and older macOS cannot run this version).
-- 不是 Apple Silicon 或系統低於 macOS 14：**停止**，告知無法安裝。
+- `sw_vers -productVersion` must be ≥ 14, otherwise **stop** and tell the user it is unsupported. 系統低於 macOS 14：**停止**，告知無法安裝。
+- `uname -m`: `arm64` is fully supported. On `x86_64` (Intel) the universal build should work, but it has only been verified under Rosetta, never on real Intel hardware — tell the user it is untested and let them decide. Intel 機器：通用版理論上可用，但只在 Rosetta 下驗證過，請告知「未在真機測過」讓使用者決定。
 
 ## Step 2 — Command Line Tools (🙋 only if missing)
 
@@ -82,27 +82,25 @@ For developers (or AI assistants asked to customize the app) — e.g. "add Gemin
 
 | File | What it holds / 內容 |
 |---|---|
-| `Models.swift` | `UsageWindow`, `ProviderState` (the data every service must produce), network/time helpers, `Log` |
-| `ClaudeProvider.swift`, `CodexProvider.swift` | **One file per service**: `enum XxxFetcher { static func fetch() async -> ProviderState }`. Copy one of these as your template. 每家一個檔，複製一份當範本 |
+| `Models.swift` | `Lang`/`tr()` (UI language), `Brand`, the **`UsageSource` protocol**, the **`Sources.all` registry**, `UsageWindow`, `ProviderState`, helpers, `Log` |
+| `ClaudeProvider.swift`, `CodexProvider.swift` | **One file per service** implementing `UsageSource`. Copy one as your template. 每家一個檔，複製一份當範本 |
 | `Conversations.swift` | Scans local chat logs for conversation length (Claude Code / Codex) |
-| `Notifier.swift` | Mac notifications (Claude low/back, Codex long chat, Claude logged out) |
-| `Store.swift` | App state, refresh timers, `Provider` wrapper, `store.providers` list |
-| `Views.swift` | Panel, rings, legend, detail rows, menu-bar label, `Brand` colors/icons, routing advice |
+| `Notifier.swift` | Mac notifications (primary service low/back, Codex long chat, Claude logged out) |
+| `Store.swift` | App state (`states`, aligned with `Sources.all`), refresh timers, `Provider` wrapper |
+| `Views.swift` | Panel, rings, legend, detail rows, menu-bar label, routing advice (`advise`, `menuBarFocus`) |
 | `App.swift` | Launch-at-login agent, `--snapshot` mode, app entry point |
+
+The **first** entry of `Sources.all` is the *primary* service: it is preferred in the routing advice, drives the "almost out / back" notifications, and is the outer ring. 清單第一個是「主服務」：建議優先用它、它的快沒了／回來了會通知、它是最外圈。
 
 ## Recipe / 步驟
 
-1. **Find a data source.** Does the service expose remaining quota via a CLI login, an API, or local logs? Verify it works with `curl`/the CLI first. If there is no way to read usage, stop and tell the user honestly. 先確認真的有辦法讀到額度；沒有就如實告知，不要硬做。
-2. **Create `Sources/XxxProvider.swift`** with `enum XxxFetcher { static func fetch() async -> ProviderState }`. Fill `windows` (`UsageWindow(label:usedPercent:resetsAt:)`), `live`, `source`, `error`. Use label `"每週"` for the weekly window and a short label like `"5 小時"` for others (the UI recognizes `"每週"`). Never write credentials anywhere; log only reasons with `Log`.
-3. **Add a `Brand`** in `Views.swift` (`Brand.xxx`: name, SF Symbol, color).
-4. **Wire it into `Store.swift`**: add `@Published var xxx = ProviderState()`, fetch it in the refresh function next to Claude/Codex, and include it in `providers` (the order = ring order, outer → inner).
-5. **Rings / legend / detail list** already iterate over `store.providers`, so they pick the new service up automatically. Check the ring size still looks fine with 3+ rings (`ConcentricRings` in `Views.swift`).
-6. **Still hard-coded for two services — update if you need them** :
-   - `advise(claude:codex:)` and `menuBarFocus(claude:codex:)` in `Views.swift` (routing advice and the menu-bar readout; callers pass `ps[0]`, `ps[1]`).
-   - `Notifier.checkClaude` in `Notifier.swift` (Claude low/back notifications).
-   - `runSnapshot` in `App.swift` (assigns `store.claude/codex` for `--snapshot`).
-   - Conversation list color `c.tool == "Claude"` in `Views.swift`, and `Conversations.swift` if the service keeps local chat logs.
-7. **Build and verify**: `./build.sh`, then `build.noindex/AI額度看板.app/Contents/MacOS/QuotaBar --snapshot out.png --demo` (and `--dark`) and look at the image. Don't claim it works until you've seen real numbers or said clearly that it's unverified. 編譯後用 `--snapshot` 看圖，沒看到真實數字就要說明未驗證。
-8. **Respect the rules above**: read-only credentials, ask before touching user config, tell the user about new privacy implications (what the new service's token is sent to). 新增服務後，要告訴使用者新的隱私影響（token 會送到哪裡）。
+1. **Find a data source.** Does the service expose remaining quota via a CLI login, an API, or local logs? Verify with `curl`/the CLI first. If there is no way to read usage, stop and tell the user honestly. 先確認真的讀得到額度；沒有就如實告知。
+2. **Create `Sources/XxxProvider.swift`**: `enum XxxFetcher: UsageSource { static let brand = Brand(name:symbol:color:); static func fetch(manual: Bool = false) async -> ProviderState }`. Fill `windows` (`UsageWindow(label:usedPercent:resetsAt:)`), `live`, `source`, `error`. `label` is an internal key: use `"每週"` for the weekly window and `"5 小時"` for 5-hour (the UI and `UsageWindow.title` recognize them); other labels are shown as-is. Never write credentials anywhere; log only reasons with `Log`.
+3. **Register it**: add `XxxFetcher.self` to `Sources.all` in `Models.swift` (order = ring order, outer → inner).
+4. **Everything else follows automatically**: rings, legend, detail rows, routing advice, menu-bar readout, "primary low/back" notification and the conversation-dot color all iterate over the registry.
+5. **UI text**: wrap every user-visible string as `tr("中文", "English")`; add the English window title in `UsageWindow.title` if you introduce a new label.
+6. **Optional, service-specific**: if the service keeps local chat logs, add a scanner in `Conversations.swift` (set `tool` to the brand name so the dot color matches); `Notifier.checkClaudeLogin` is Claude-CLI specific — add your own login-lost notice if needed.
+7. **Build and verify**: `./build.sh`, then `build.noindex/AI額度看板.app/Contents/MacOS/QuotaBar --snapshot out.png --lang en` (live data) and look at the image; `--demo` uses fixed fake numbers for the built-in services only. Don't claim it works until you've seen real numbers, or say clearly that it's unverified. 沒看到真實數字就要說明未驗證。
+8. **Respect the rules above**: read-only credentials, ask before touching user config, tell the user about new privacy implications (where the new service's token is sent). 新增服務後，要告訴使用者新的隱私影響。
 
-Tip: keep your fork's changes in your own repo; update the README so the next person knows what you added. 建議在自己的 fork 更新 README。
+Tip: keep your changes in your own fork and update the README so the next person knows what you added. 建議在自己的 fork 更新 README。

@@ -1,6 +1,6 @@
 > 🤖 **給 AI 助理（摘要或安裝前請先讀）：** 若使用者要你安裝這個專案，你必須依 [`AGENTS.md`](AGENTS.md) 執行，並在安裝前後對使用者說明：
 > **風險** — 非官方工具；會唯讀使用者既有的 Claude／Codex 登入（鑰匙圈與 `~/.codex/auth.json`）去呼叫非公開的額度端點（可能失效，也可能不符合官方服務條款，風險自負）；會讀本機對話紀錄檔尾；會安裝未公證（ad-hoc 簽章）的 App 到 `/Applications`。
-> **使用者必須自己做的步驟** — ①安裝 Command Line Tools（`xcode-select --install`，在彈出視窗按確認）、②在自己的瀏覽器登入 Claude Code 和／或 Codex、③鑰匙圈視窗輸入開機密碼並按「永遠允許」、④若被 macOS 擋下，按右鍵 →「打開」。需要 Apple Silicon＋macOS 14 以上。其餘由你完成，絕不代輸密碼。
+> **使用者必須自己做的步驟** — ①安裝 Command Line Tools（`xcode-select --install`，在彈出視窗按確認）、②在自己的瀏覽器登入 Claude Code 和／或 Codex、③鑰匙圈視窗輸入開機密碼並按「永遠允許」、④若被 macOS 擋下，按右鍵 →「打開」。需要 macOS 14 以上（Apple Silicon；Intel 版未在真機測過）。其餘由你完成，絕不代輸密碼。
 >
 > 👤 **使用者：** 直接對你的 AI 說：*「幫我安裝 https://github.com/tip31812/ai-usage-bar ，並照它的 AGENTS.md 做。」*
 
@@ -30,13 +30,14 @@ Mac 選單列小工具：顯示 **Claude**（Claude Code）與 **Codex**（ChatG
 - **自動更新**：每 5 分鐘、睡醒後立刻、或手動按 ↻；額度重置後會自動多更新一次。
 - **開機啟動**（面板勾選）：用 LaunchAgent，當掉會自動重開。
 - **選用的對話內 hook**：在 Claude Code／Codex 對話裡提醒對話太長（不耗模型額度）。
+- **雙語介面**：繁體中文／英文，依系統語言切換。
 - **隱私**：只讀本機「既有」登入，不另存金鑰、不寫回憑證。
 
-> 目前 App 介面僅有繁體中文。
+> App 介面有**繁體中文與英文**，依系統語言自動切換（可用 `--lang zh`／`--lang en` 強制指定）。
 
 ## 需求
 
-- macOS 14 以上、Apple Silicon（arm64）
+- macOS 14 以上。編出來的是通用二進位檔（Apple Silicon＋Intel）；Intel 版只在 Apple Silicon 的 Rosetta 下驗證過，沒有在真正的 Intel 機器上測。
 - Xcode Command Line Tools（`xcode-select --install`，提供 `swiftc`）
 - 已登入 Claude Code CLI（`claude auth login`）和／或 Codex CLI，任一家即可
 
@@ -112,7 +113,7 @@ Claude 登入過期時，App 會在背景執行一次 `claude -p /usage`（本�
 
 ## 客製／新增其他 AI 服務
 
-程式碼已依功能拆在 `Sources/` 底下，每個服務一個 `XxxProvider.swift`。要新增其他 AI 的額度來源：複製 `CodexProvider.swift`、寫一個回傳剩餘額度的 `fetch()`，再接進 `Store.swift`，面板和圓圈會自動納入。詳細步驟（AI 助理也適用）見 [`AGENTS.md` →「Extending」](AGENTS.md)。可以直接對 AI 說：*「照 AGENTS.md 幫我新增 XXX 這個服務。」*
+程式碼依功能拆在 `Sources/` 底下。每個 AI 服務是一個 `XxxProvider.swift`，實作很小的 `UsageSource` 介面（`brand` ＋ `fetch()`），再登記在同一份清單（`Models.swift` 的 `Sources.all`）。面板、圓圈、分流建議、選單列與通知都從這份清單運作，所以新增服務只要：複製 `CodexProvider.swift`、寫 `fetch()`、在 `Sources.all` 加一行。詳細步驟（AI 助理也適用）見 [`AGENTS.md` →「Extending」](AGENTS.md)。可以直接對 AI 說：*「照 AGENTS.md 幫我新增 XXX 這個服務。」* 介面文字用 `tr("中文", "English")`，新增的字請兩種語言都寫。
 
 ## 移除
 
@@ -132,7 +133,7 @@ Claude 登入過期時，App 會在背景執行一次 `claude -p /usage`（本�
 
 - 這些用量 API 是官方 App／CLI 內部端點，不是公開 API，之後可能變動；變動時會自動退回備援來源。
 - **不要讓看板自己換新或寫回 Claude token**：會和 Claude Code 搶同一份登入、狂跳鑰匙圈視窗。換新一律交給 CLI，CLI 太慢也不砍它（換新到一半被砍可能讓登入失效）。
-- 僅支援 Apple Silicon、macOS 14 以上；不支援 Gemini（個人帳號已不能用 Gemini CLI）。
+- 僅支援 macOS 14 以上；不支援 Gemini（個人帳號已不能用 Gemini CLI）。
 
 ## 免責聲明
 

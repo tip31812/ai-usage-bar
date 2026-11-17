@@ -6,10 +6,12 @@ import UserNotifications
 
 // MARK: - Codex
 
-enum CodexFetcher {
+enum CodexFetcher: UsageSource {
     static let home = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".codex")
 
-    static func fetch() async -> ProviderState {
+    static let brand = Brand(name: "Codex", symbol: "chevron.left.forwardslash.chevron.right", color: Color(red: 0.06, green: 0.64, blue: 0.50))
+
+    static func fetch(manual: Bool = false) async -> ProviderState {
         if let s = try? await fromAPI() { return s }
         return fromSessions()
     }
@@ -35,9 +37,9 @@ enum CodexFetcher {
         }
         s.windows.sort { ($0.resetsAt ?? .distantFuture) < ($1.resetsAt ?? .distantFuture) }
         s.plan = (resp["plan_type"] as? String)?.capitalized
-        s.source = "官方用量 API（即時）"
+        s.source = tr("官方用量 API（即時）", "Official usage API (live)")
         s.live = true
-        if (rl["limit_reached"] as? Bool) == true { s.note = "已達上限" }
+        if (rl["limit_reached"] as? Bool) == true { s.note = tr("已達上限", "Limit reached") }
         return s
     }
 
@@ -67,13 +69,13 @@ enum CodexFetcher {
                     s.windows.append(UsageWindow(label: windowLabel(seconds: mins * 60), usedPercent: u, resetsAt: reset))
                 }
                 s.plan = (rl["plan_type"] as? String)?.capitalized
-                s.source = "Codex 對話紀錄（\(relative(mtime))）"
-                s.note = "API 暫時讀不到；開一下 Codex 就會更新登入"
+                s.source = tr("Codex 對話紀錄（\(relative(mtime))）", "Codex session log (\(relative(mtime)))")
+                s.note = tr("API 暫時讀不到；開一下 Codex 就會更新登入", "API unavailable; open Codex once to refresh its login")
                 return s
             }
         }
-        s.source = "無資料"
-        s.error = "讀不到 Codex 登入或最近 14 天的對話紀錄"
+        s.source = tr("無資料", "No data")
+        s.error = tr("讀不到 Codex 登入或最近 14 天的對話紀錄", "No Codex login or session log from the last 14 days")
         return s
     }
 

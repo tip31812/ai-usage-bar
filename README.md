@@ -34,6 +34,17 @@ A tiny macOS menu-bar app that shows how much **Claude** (Claude Code) and **Cod
 - Xcode Command Line Tools (`xcode-select --install`) for `swiftc`
 - Claude Code CLI logged in (`claude auth login`) and/or Codex CLI logged in. Either one is enough.
 
+## Before you install: things you must do yourself
+
+Whether you install by hand or ask an AI assistant (Claude Code, Codex…) to do it, a few steps cannot be automated:
+
+1. **Command Line Tools** — if missing, run `xcode-select --install` and confirm the pop-up.
+2. **Log in to Claude Code and/or Codex CLI** — authorize in your own browser (`claude auth login`).
+3. **Keychain prompt** — on first run, enter your Mac password and choose **Always Allow**.
+4. **Gatekeeper** — the app is not notarized; if blocked, right-click → **Open** once.
+
+> Tip: you can paste this repo's URL to an AI assistant and say "install this". `AGENTS.md` tells it to remind you of the steps above.
+
 ## Install
 
 ```bash

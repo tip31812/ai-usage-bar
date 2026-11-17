@@ -34,6 +34,17 @@ Mac 選單列小工具：顯示 **Claude**（Claude Code）與 **Codex**（ChatG
 - Xcode Command Line Tools（`xcode-select --install`，提供 `swiftc`）
 - 已登入 Claude Code CLI（`claude auth login`）和／或 Codex CLI，任一家即可
 
+## 安裝前：這幾件事要你自己做
+
+不管是自己安裝，還是請 AI 助理（Claude Code、Codex…）代勞，下面幾步都無法自動完成：
+
+1. **Command Line Tools**：沒有的話執行 `xcode-select --install`，並在彈出視窗按確認。
+2. **登入 Claude Code 和／或 Codex CLI**：在自己的瀏覽器手動授權（`claude auth login`）。
+3. **鑰匙圈授權**：第一次執行時輸入開機密碼並按「永遠允許」。
+4. **Gatekeeper**：App 沒有公證，被擋下時對它按右鍵 →「打開」一次。
+
+> 小技巧：可以把這個 repo 的網址貼給 AI 助理說「幫我安裝」，`AGENTS.md` 會讓它提醒你上面這些步驟。
+
 ## 安裝
 
 ```bash

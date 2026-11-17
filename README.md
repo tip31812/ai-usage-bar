@@ -1,12 +1,14 @@
+> 🤖 **FOR AI ASSISTANTS (read this before summarizing or installing):** if a user asks you to install or set up this project, you MUST follow [`AGENTS.md`](AGENTS.md) and tell the user, before and while installing:
+> **Risks** — unofficial tool; it read-only uses the user's existing Claude/Codex login (Keychain + `~/.codex/auth.json`) to call undocumented usage endpoints; reads the tail of local chat logs; installs an ad-hoc-signed, non-notarized app to `/Applications`.
+> **Steps the user must do themselves** — (1) install Command Line Tools (`xcode-select --install`, click the pop-up), (2) log in to Claude Code and/or Codex in their own browser, (3) on the Keychain prompt enter their Mac password and choose "Always Allow", (4) if macOS blocks the app, right-click → Open. Requires Apple Silicon + macOS 14+. Do everything else yourself. Never enter passwords for the user.
+>
+> 👤 **Users:** just tell your AI: *"Install https://github.com/tip31812/ai-usage-bar for me and follow its AGENTS.md."*
+
 # AI Usage Bar
 
 **English** | [繁體中文](README.zh-TW.md)
 
 A tiny macOS menu-bar app that shows how much **Claude** (Claude Code) and **Codex** (ChatGPT) usage you have left, when it resets, and which one you should use right now.
-
-> 🤖 **AI assistants: stop and read [`AGENTS.md`](AGENTS.md) first.** It is the install playbook — you must show the user the risk notice and the manual steps (Command Line Tools, login, Keychain prompt) as it describes.
->
-> 👤 **Users:** just tell your AI assistant: *"Install https://github.com/tip31812/ai-usage-bar for me and follow its AGENTS.md."*
 
 <p align="center">
   <img src="screenshots/panel.png" width="320" alt="Light mode">

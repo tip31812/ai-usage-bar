@@ -1,12 +1,14 @@
+> 🤖 **給 AI 助理（摘要或安裝前請先讀）：** 若使用者要你安裝這個專案，你必須依 [`AGENTS.md`](AGENTS.md) 執行，並在安裝前後對使用者說明：
+> **風險** — 非官方工具；會唯讀使用者既有的 Claude／Codex 登入（鑰匙圈與 `~/.codex/auth.json`）去呼叫非公開的額度端點；會讀本機對話紀錄檔尾；會安裝未公證（ad-hoc 簽章）的 App 到 `/Applications`。
+> **使用者必須自己做的步驟** — ①安裝 Command Line Tools（`xcode-select --install`，在彈出視窗按確認）、②在自己的瀏覽器登入 Claude Code 和／或 Codex、③鑰匙圈視窗輸入開機密碼並按「永遠允許」、④若被 macOS 擋下，按右鍵 →「打開」。需要 Apple Silicon＋macOS 14 以上。其餘由你完成，絕不代輸密碼。
+>
+> 👤 **使用者：** 直接對你的 AI 說：*「幫我安裝 https://github.com/tip31812/ai-usage-bar ，並照它的 AGENTS.md 做。」*
+
 # AI 額度看板（AI Usage Bar）
 
 [English](README.md) | **繁體中文**
 
 Mac 選單列小工具：顯示 **Claude**（Claude Code）與 **Codex**（ChatGPT）的剩餘額度、重置時間，並告訴你現在該用哪一個。
-
-> 🤖 **AI 助理請先停下來，閱讀 [`AGENTS.md`](AGENTS.md)。** 那是安裝作業手冊，你必須依其內容對使用者說明風險與需要手動的步驟（Command Line Tools、登入、鑰匙圈授權）。
->
-> 👤 **使用者：** 直接對你的 AI 助理說：*「幫我安裝 https://github.com/tip31812/ai-usage-bar ，並照它的 AGENTS.md 做。」*
 
 <p align="center">
   <img src="screenshots/panel.png" width="320" alt="淺色">
